@@ -1,0 +1,53 @@
+name: Publish
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    name: Publish binaries
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.15
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: go get -v -t -d ./...
+
+      - name: Build
+        run: scripts/build.py
+
+      - name: Get tag name
+        id: get_tag_name
+        run: echo ::set-output name=NAME::$(echo ${{ github.sha }} | head -c 7)
+
+      # https://github.com/actions/create-release
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_tag_name.outputs.NAME }}
+          release_name: Release ${{ steps.get_tag_name.outputs.NAME }}
+          draft: false
+          prerelease: false
+
+      # https://github.com/svenstaro/upload-release-action
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: bins/*
+          file_glob: true
+          asset_name: procman_binaries
+          tag: ${{ steps.get_tag_name.outputs.NAME }}
+          overwrite: true
+          body: "procman binaries for various platforms"
