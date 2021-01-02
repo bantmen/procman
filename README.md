@@ -24,6 +24,18 @@ You can enforce restarts based on the process status:
 procman -mem 50 python some_file.py
 ```
 
+If you want to separate your command's stdout and stderr:
+
+```shell
+procman -logfile out ls -lh
+```
+
+Additionally, you can redirect procman's own logging:
+
+```shell
+procman -logfile command_out ls -lh > procman_out
+```
+
 # Supported systems
 
 Linux, macOS, and Raspberry Pi.
