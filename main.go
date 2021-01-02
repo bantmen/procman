@@ -12,6 +12,7 @@ import (
 )
 
 const zombieStatus = "Z"
+const restartFrequency = time.Second
 
 func usage() {
 	fmt.Println("procman -- monitor and run your command forever")
@@ -31,6 +32,7 @@ func usage() {
 }
 
 func main() {
+	logfilePtr := flag.String("logfile", "", "Redirect command's stdout to the given file path. stderr will have the postfix '.error'. Default is procman's stdout and stderr.")
 	memPtr := flag.Float64("mem", 100, "Max memory percentage threshold. When exceeded, the process is restarted. Default is no threshold.")
 
 	if len(os.Args) == 1 || os.Args[1] == "-h" || os.Args[1] == "--help" {
@@ -40,11 +42,34 @@ func main() {
 
 	flag.Parse()
 	memPercentThreshold := float32(*memPtr)
+	logFile := *logfilePtr
 
 	fmt.Println("Running process: ", flag.Args())
 
 	cmdName := flag.Args()[0]
 	cmdArgs := flag.Args()[1:]
+
+	// Command's default stdout & stderr are procman's stdout & stderr.
+	cmdStdout := os.Stdout
+	cmdStderr := os.Stderr
+	if len(logFile) > 0 {
+		file, err := os.Create(logFile)
+		if err != nil {
+			log.Panicln(err)
+		}
+		cmdStdout = file
+		defer cmdStdout.Close()
+
+		errorLogfile := logFile + ".error"
+		file, err = os.Create(errorLogfile)
+		if err != nil {
+			log.Panicln(err)
+		}
+		cmdStderr = file
+		defer cmdStderr.Close()
+
+		fmt.Printf("Logging command stdout to '%s' and stderr to '%s'\n", logFile, errorLogfile)
+	}
 
 	if memPercentThreshold < 100 {
 		fmt.Printf("With memory threshold: %.2f percent\n", memPercentThreshold)
@@ -53,9 +78,8 @@ func main() {
 	for {
 		// Spawn
 		cmd := exec.Command(cmdName, cmdArgs...)
-		// We want the process logs to be visible.
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		cmd.Stdout = cmdStdout
+		cmd.Stderr = cmdStderr
 		err := cmd.Start()
 		if err != nil {
 			log.Panicln(err)
@@ -97,7 +121,7 @@ func main() {
 				fmt.Printf("Restarting: mem percent is at %f\n", percent)
 				break
 			}
-			time.Sleep(1 * time.Second)
+			time.Sleep(restartFrequency)
 		}
 	}
 }

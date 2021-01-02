@@ -4,7 +4,7 @@
 
 # Installation
 
-Download the relevant binary from the [latest release](https://github.com/bantmen/procman/releases/latest).
+Download your system's binary from the [latest release](https://github.com/bantmen/procman/releases/latest). Releases are done automatically on every merge.
 
 # Usage
 
@@ -24,7 +24,7 @@ You can enforce restarts based on the process status:
 procman -mem 50 python some_file.py
 ```
 
-# Supported platforms
+# Supported systems
 
 Linux, macOS, and Raspberry Pi.
 
