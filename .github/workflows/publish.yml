@@ -24,6 +24,9 @@ jobs:
       - name: Build
         run: scripts/build.py
 
+      - name: Test
+        run: scripts/test.sh
+
       - name: Get tag name
         id: get_tag_name
         run: echo ::set-output name=NAME::$(echo ${{ github.sha }} | head -c 7)

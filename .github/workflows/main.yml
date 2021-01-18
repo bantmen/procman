@@ -24,4 +24,7 @@ jobs:
         run: go get -v -t -d ./...
 
       - name: Build
-        run: go build -v ./...
+        run: scripts/build.py
+      
+      - name: Test
+        run: scripts/test.sh
